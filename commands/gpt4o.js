@@ -22,7 +22,7 @@ module.exports = {
       const result = response.data.result;
 
       // Send the generated text to the user
-      sendMessage(senderId, { text: "GPT4o BY CHATGPT: \n\n" result }, pageAccessToken);
+      sendMessage(senderId, { text: "GPT4o BY CHATGPT: \n\n" : result }, pageAccessToken);
 
     } catch (error) {
       console.error('Error calling GPT-4o API:', error);
