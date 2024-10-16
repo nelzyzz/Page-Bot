@@ -7,8 +7,9 @@ module.exports = {
   async execute(senderId, args, pageAccessToken, sendMessage) {
     const prompt = args.join(' ');
 
-    if(prompt === ""){
-       sendMessage(senderId, {text: "Usage: /gpt4o <question>"}, pageAccessToken);
+    if (prompt === "") {
+      sendMessage(senderId, { text: "Usage: /gpt4o <question>" }, pageAccessToken);
+      return; // Ensure the function doesn't continue
     }
 
     // Inform the user that content is being generated
@@ -21,8 +22,8 @@ module.exports = {
       // Extract the result from the response
       const result = response.data.result;
 
-      // Send the generated text to the user
-      sendMessage(senderId, { text: "GPT4o BY CHATGPT: \n\n" : result }, pageAccessToken);
+      // Send the generated text to the user with proper concatenation
+      sendMessage(senderId, { text: "GPT4o BY CHATGPT:\n\n" + result }, pageAccessToken);
 
     } catch (error) {
       console.error('Error calling GPT-4o API:', error);
