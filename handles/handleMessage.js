@@ -15,6 +15,12 @@ async function handleMessage(event, pageAccessToken) {
   const senderId = event.sender.id;
   const messageText = event.message.text.trim();
 
+  // Check if the user sends "prefix" (case insensitive)
+  if (messageText.toLowerCase() === 'prefix') {
+    sendMessage(senderId, { text: `The prefix for commands in this bot is "${prefix}".` }, pageAccessToken);
+    return;
+  }
+
   if (messageText.startsWith(prefix)) {
     const args = messageText.slice(prefix.length).split(' ');
     const commandName = args.shift().toLowerCase();
