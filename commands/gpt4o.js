@@ -2,7 +2,7 @@ const axios = require('axios');
 
 module.exports = {
   name: 'gpt4o',
-  description: 'Generate text and images using GPT-4o API',
+  description: 'Generate text using GPT-4o API',
   author: 'Carl John Villavito',
   async execute(senderId, args, pageAccessToken, sendMessage) {
     const prompt = args.join(' ');
@@ -17,40 +17,8 @@ module.exports = {
       // Extract the result from the response
       const result = response.data.result;
 
-      // Check if the response contains an image link (using a regex pattern)
-      const regex = /({[^}]+})\s*!image([^)]+)\s*(.*)/s;
-      const match = result.match(regex);
-
-      if (match) {
-        // This is a text-image response
-        const jsonText = match[1]; // The JSON text with size and prompt
-        const imageUrl = match[2]; // The image URL
-        const descriptionText = match[3]; // The rest of the text description
-
-        // Send the image first as an attachment
-        const imageAttachment = {
-          attachment: {
-            type: 'image',
-            payload: {
-              url: imageUrl,
-              is_reusable: true
-            }
-          }
-        };
-
-        // Send the image to the user
-        sendMessage(senderId, imageAttachment, pageAccessToken);
-
-        // Send the prompt description and additional text separately
-        sendMessage(senderId, { text: jsonText }, pageAccessToken);
-        if (descriptionText.trim()) {
-          sendMessage(senderId, { text: descriptionText }, pageAccessToken);
-        }
-
-      } else {
-        // This is a text-only response
-        sendMessage(senderId, { text: result }, pageAccessToken);
-      }
+      // Send the generated text to the user
+      sendMessage(senderId, { text: "GPT4o BY CHATGPT: \n\n" result }, pageAccessToken);
 
     } catch (error) {
       console.error('Error calling GPT-4o API:', error);
