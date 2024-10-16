@@ -7,6 +7,10 @@ module.exports = {
   async execute(senderId, args, pageAccessToken, sendMessage) {
     const prompt = args.join(' ');
 
+    if(prompt === ""){
+       sendMessage(senderId, {text: "Usage: /gpt4o <question>"}, pageAccessToken);
+    }
+
     // Inform the user that content is being generated
     sendMessage(senderId, { text: 'Generating content... Please wait.' }, pageAccessToken);
 
