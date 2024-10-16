@@ -13,15 +13,16 @@ module.exports = {
     try {
       const apiUrl = `https://deku-rest-apis.ooguy.com/api/gpt-4o?q=${encodeURIComponent(prompt)}&uid=${senderId}`;
       const response = await axios.get(apiUrl);
-      
+
       // Extract the result from the response
       const result = response.data.result;
 
-      // Use regex to split the text and the image URL
+      // Check if the response contains an image link (using a regex pattern)
       const regex = /({[^}]+})\s*!image([^)]+)\s*(.*)/s;
       const match = result.match(regex);
 
       if (match) {
+        // This is a text-image response
         const jsonText = match[1]; // The JSON text with size and prompt
         const imageUrl = match[2]; // The image URL
         const descriptionText = match[3]; // The rest of the text description
@@ -42,11 +43,15 @@ module.exports = {
 
         // Send the prompt description and additional text separately
         sendMessage(senderId, { text: jsonText }, pageAccessToken);
-        sendMessage(senderId, { text: descriptionText }, pageAccessToken);
+        if (descriptionText.trim()) {
+          sendMessage(senderId, { text: descriptionText }, pageAccessToken);
+        }
 
       } else {
-        sendMessage(senderId, { text: 'Could not parse the API response properly. Please try again.' }, pageAccessToken);
+        // This is a text-only response
+        sendMessage(senderId, { text: result }, pageAccessToken);
       }
+
     } catch (error) {
       console.error('Error calling GPT-4o API:', error);
       sendMessage(senderId, { text: 'There was an error generating the content. Please try again later.' }, pageAccessToken);
