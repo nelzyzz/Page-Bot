@@ -36,6 +36,9 @@ app.post('/webhook', (req, res) => {
   if (body.object === 'page') {
     body.entry.forEach(entry => {
       entry.messaging.forEach(event => {
+        const userId = event.sender.id;
+        console.log(`Received message from user ID: ${userId}`); // Log the user ID for testing
+
         if (event.message) {
           handleMessage(event, PAGE_ACCESS_TOKEN);
         } else if (event.postback) {
@@ -55,7 +58,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 
-  // Notify the user that the bot is online
+  // Notify the user that the bot is online (make sure you've interacted with the bot first)
   const notificationMessage = `[SYSTEM] - ${nameOfBot} is now online!`;
   sendMessage(senderId, { text: notificationMessage }, PAGE_ACCESS_TOKEN);
 });
