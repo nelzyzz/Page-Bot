@@ -13,7 +13,13 @@ for (const file of commandFiles) {
 
 async function handleMessage(event, pageAccessToken) {
   const senderId = event.sender.id;
-  const messageText = event.message.text.trim();
+  const messageText = event.message.text.trim().toLowerCase();
+
+  // Check if the user sends "prefix" (case insensitive)
+  if (messageText === 'prefix') {
+    sendMessage(senderId, { text: `The prefix for commands in this bot is "${prefix}".` }, pageAccessToken);
+    return;
+  }
 
   // Check if the message starts with the prefix
   if (!messageText.startsWith(prefix)) {
