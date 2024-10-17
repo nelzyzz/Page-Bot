@@ -52,4 +52,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-sendMessage(senderId, {text: "[SYSTEM] - CHATBOT IS ONLINE!"}, pageAccessToken);
+async execute(senderId, pageAccessToken, sendMessage){
+  sendMessage(senderId, {text: "[SYSTEM] - CHATBOT IS ONLINE!"}, pageAccessToken);
+}
