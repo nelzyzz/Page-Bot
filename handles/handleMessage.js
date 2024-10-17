@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { sendMessage } = require('./sendMessage');
+const axios = require('axios');
 
 const commands = new Map();
 const prefix = '/';
@@ -24,8 +25,8 @@ async function handleMessage(event, pageAccessToken) {
 
   // Check if the message starts with the prefix
   if (!messageText.startsWith(prefix)) {
-    const warningMessage = `You cannot access the bot like that. Please use "${prefix}help" to get the list of commands.`;
-    sendMessage(senderId, { text: warningMessage }, pageAccessToken);
+    // Call the sim feature if there's no prefix
+    await callSimAPI(senderId, messageText, pageAccessToken);
     return;
   }
 
@@ -45,11 +46,28 @@ async function handleMessage(event, pageAccessToken) {
     try {
       await command.execute(senderId, args, pageAccessToken, sendMessage);
     } catch (error) {
-      console.error(`Error executing command ${commandName}:`, error); // Log the error for debugging
+      console.error(`Error executing command ${commandName}:`, error);
       sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
     }
   } else {
     sendMessage(senderId, { text: `The command "${commandName}" is not available. Please use a valid command.` }, pageAccessToken);
+  }
+}
+
+// Function to call the Sim API
+async function callSimAPI(senderId, messageText, pageAccessToken) {
+  const APIKEY = 'nsh-9c511a1676801419a3e805751e7a35b2';
+  const apiUrl = `https://sim.up.railway.app/nash?prompt=${encodeURIComponent(messageText)}&apiKey=${APIKEY}`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    const simResponse = response.data.response;
+
+    // Send the response from Sim back to the user
+    sendMessage(senderId, { text: simResponse }, pageAccessToken);
+  } catch (error) {
+    console.error('Error calling Sim API:', error);
+    sendMessage(senderId, { text: 'There was an error communicating with Sim. Please try again later.' }, pageAccessToken);
   }
 }
 
