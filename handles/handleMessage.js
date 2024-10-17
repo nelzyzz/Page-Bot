@@ -5,6 +5,7 @@ const { sendMessage } = require('./sendMessage');
 const commands = new Map();
 const prefix = '/';
 
+// Load command files
 const commandFiles = fs.readdirSync(path.join(__dirname, '../commands')).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
   const command = require(`../commands/${file}`);
@@ -44,7 +45,7 @@ async function handleMessage(event, pageAccessToken) {
     try {
       await command.execute(senderId, args, pageAccessToken, sendMessage);
     } catch (error) {
-      console.error(`Error executing command ${commandName}:`, error);
+      console.error(`Error executing command ${commandName}:`, error); // Log the error for debugging
       sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
     }
   } else {
