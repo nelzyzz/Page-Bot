@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const { handleMessage } = require('./handles/handleMessage');
 const { handlePostback } = require('./handles/handlePostback');
-const { sendMessage } = require('./handles/sendMessage');
 
 const app = express();
 app.use(bodyParser.json());
@@ -51,7 +50,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-async execute(senderId, pageAccessToken, sendMessage){
-  sendMessage(senderId, {text: "[SYSTEM] - CHATBOT IS ONLINE!"}, pageAccessToken);
-}
