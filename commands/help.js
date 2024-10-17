@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = {
   name: 'help',
-  description: 'Show available commands with enhanced formatting',
+  description: 'Show available commands',
   author: 'System',
   execute(senderId, args, pageAccessToken, sendMessage) {
     const commandsDir = path.join(__dirname, '../commands');
@@ -11,15 +11,12 @@ module.exports = {
 
     const commands = commandFiles.map(file => {
       const command = require(path.join(commandsDir, file));
-      return `🔹 *${command.name.toUpperCase()}*\n   - _${command.description}_\n   👤 *Author:* ${command.author}`;
+      return `⟿ ${command.name}\n  - ${command.description}\n  - Credits: ${command.author}`;
     });
 
     const totalCommands = commandFiles.length;
-    const header = `✨ Welcome to *CarlJohn Bot*! ✨\nHere are the available commands you can use:\n\n`;
-    const footer = `\n📚 _Use "${prefix}help" to rediscover this list anytime!_`;
-    const helpMessage = `${header}${commands.join('\n\n')}\n\n⚙️ *Total Commands Available:* ${totalCommands} ${footer}`;
+    const helpMessage = `Here are the available commands: \nTotal commands: ${totalCommands} \n\n${commands.join('\n\n')}`;
     
-    // Send the formatted help message
     sendMessage(senderId, { text: helpMessage }, pageAccessToken);
   }
 };
