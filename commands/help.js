@@ -9,7 +9,6 @@ module.exports = {
     const commandsDir = path.join(__dirname, '../commands');
     const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith('.js'));
 
-    // Customize the appearance of the help message
     const commands = commandFiles.map(file => {
       const command = require(path.join(commandsDir, file));
       return `🔹 *${command.name.toUpperCase()}*\n   - _${command.description}_\n   👤 *Author:* ${command.author}`;
