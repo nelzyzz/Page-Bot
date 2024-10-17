@@ -15,47 +15,36 @@ async function handleMessage(event, pageAccessToken) {
   const senderId = event.sender.id;
   const messageText = event.message.text.trim();
 
-  // Check if the user sends "prefix" (case insensitive)
-  if (messageText.toLowerCase() === 'prefix') {
-    sendMessage(senderId, { text: `The prefix for commands in this bot is "${prefix}".` }, pageAccessToken);
+  // Check if the message starts with the prefix
+  if (!messageText.startsWith(prefix)) {
+    // Notify the user that they need to use the prefix to access commands
+    const warningMessage = `You cannot access the bot like that. Please use "${prefix}help" to get the list of commands.`;
+    sendMessage(senderId, { text: warningMessage }, pageAccessToken);
     return;
   }
 
-  if (messageText.startsWith(prefix)) {
-    const args = messageText.slice(prefix.length).split(' ');
-    const commandName = args.shift().toLowerCase();
+  // Proceed with processing the command if it has the correct prefix
+  const args = messageText.slice(prefix.length).split(' ');
+  const commandName = args.shift().toLowerCase();
 
-    // Check if the user just sent the prefix "/"
-    if (commandName === '') {
-      sendMessage(senderId, { text: 'Invalid command. Please provide a valid command.' }, pageAccessToken);
-      return;
-    }
-
-    // Check if the command exists
-    if (commands.has(commandName)) {
-      const command = commands.get(commandName);
-      try {
-        await command.execute(senderId, args, pageAccessToken, sendMessage);
-      } catch (error) {
-        console.error(`Error executing command ${commandName}:`, error);
-        sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
-      }
-    } else {
-      // If the command doesn't exist
-      sendMessage(senderId, { text: `The command "${commandName}" is not available. Please use a valid command.` }, pageAccessToken);
-    }
+  // Check if the user just sent the prefix "/"
+  if (commandName === '') {
+    sendMessage(senderId, { text: 'Invalid command. Please provide a valid command.' }, pageAccessToken);
     return;
   }
 
-  // If no command was used, fall back to AI handling (if applicable)
-  const aiCommand = commands.get('ai');
-  if (aiCommand) {
+  // Check if the command exists
+  if (commands.has(commandName)) {
+    const command = commands.get(commandName);
     try {
-      await aiCommand.execute(senderId, messageText, pageAccessToken, sendMessage);
+      await command.execute(senderId, args, pageAccessToken, sendMessage);
     } catch (error) {
-      console.error('Error executing AI command:', error);
-      sendMessage(senderId, { text: 'There was an error processing your request.' }, pageAccessToken);
+      console.error(`Error executing command ${commandName}:`, error);
+      sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
     }
+  } else {
+    // If the command doesn't exist
+    sendMessage(senderId, { text: `The command "${commandName}" is not available. Please use a valid command.` }, pageAccessToken);
   }
 }
 
