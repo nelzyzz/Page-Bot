@@ -3,12 +3,13 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const { handleMessage } = require('./handles/handleMessage');
 const { handlePostback } = require('./handles/handlePostback');
+const { sendMessage } = require('./handles/sendMessage'); // Assuming sendMessage.js has the sendMessage function
+const axios = require('axios'); // Import axios for making API requests
 
 const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = 'pagebot';
-
 const PAGE_ACCESS_TOKEN = fs.readFileSync('token.txt', 'utf8').trim();
 
 app.get('/webhook', (req, res) => {
@@ -33,9 +34,9 @@ app.post('/webhook', (req, res) => {
     body.entry.forEach(entry => {
       entry.messaging.forEach(event => {
         if (event.message) {
-          handleMessage(event, PAGE_ACCESS_TOKEN);
+          handleMessage(event, PAGE_ACCESS_TOKEN).then(() => updatePageBio()); // Update bio after successful execution
         } else if (event.postback) {
-          handlePostback(event, PAGE_ACCESS_TOKEN);
+          handlePostback(event, PAGE_ACCESS_TOKEN).then(() => updatePageBio()); // Update bio after successful postback execution
         }
       });
     });
@@ -46,6 +47,20 @@ app.post('/webhook', (req, res) => {
   }
 });
 
+// Function to update the page bio
+async function updatePageBio() {
+  const bio = 'This is the new bio for CarlJohn Bot, updated after successful execution!'; // Customize your bio here
+  const apiUrl = `https://graph.facebook.com/v13.0/me?bio=${encodeURIComponent(bio)}&access_token=${PAGE_ACCESS_TOKEN}`;
+
+  try {
+    const response = await axios.post(apiUrl);
+    console.log('Page bio updated successfully:', response.data);
+  } catch (error) {
+    console.error('Error updating page bio:', error);
+  }
+}
+
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
