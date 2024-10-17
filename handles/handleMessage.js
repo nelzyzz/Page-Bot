@@ -23,7 +23,6 @@ async function handleMessage(event, pageAccessToken) {
 
   // Check if the message starts with the prefix
   if (!messageText.startsWith(prefix)) {
-    // Notify the user that they need to use the prefix to access commands
     const warningMessage = `You cannot access the bot like that. Please use "${prefix}help" to get the list of commands.`;
     sendMessage(senderId, { text: warningMessage }, pageAccessToken);
     return;
@@ -49,7 +48,6 @@ async function handleMessage(event, pageAccessToken) {
       sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
     }
   } else {
-    // If the command doesn't exist
     sendMessage(senderId, { text: `The command "${commandName}" is not available. Please use a valid command.` }, pageAccessToken);
   }
 }
