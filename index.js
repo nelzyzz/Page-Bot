@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const { handleMessage } = require('./handles/handleMessage');
 const { handlePostback } = require('./handles/handlePostback');
+const { sendMessage } = require('./handles/sendMessage');
 
 const app = express();
 app.use(bodyParser.json());
@@ -49,4 +50,5 @@ app.post('/webhook', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  sendMessage(senderId, {text: "[SYSTEM] - CHATBOT IS ONLINE!"}, pageAccessToken);
 });
