@@ -16,7 +16,7 @@ module.exports = {
     sendMessage(senderId, { text: 'Generating content... Please wait.' }, pageAccessToken);
 
     try {
-      const apiUrl = `https://deku-rest-apis.ooguy.com/api/gpt-4o?q=${encodeURIComponent(prompt)}&uid=${senderId}`;
+      const apiUrl = `https://joshweb.click/api/gpt-4o?q=${encodeURIComponent(prompt)}&uid=${senderId}`;
       const response = await axios.get(apiUrl);
 
       // Extract the result from the response
