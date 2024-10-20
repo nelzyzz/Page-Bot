@@ -56,12 +56,11 @@ async function handleMessage(event, pageAccessToken) {
 
 // Function to call the Sim API
 async function callSimAPI(senderId, messageText, pageAccessToken) {
-  const APIKEY = 'nsh-9c511a1676801419a3e805751e7a35b2';
-  const apiUrl = `https://sim.up.railway.app/nash?prompt=${encodeURIComponent(messageText)}&apiKey=${APIKEY}`;
+  const apiUrl = `https://rest-api.joshuaapostol.site/simisimi?prompt=${encodeURIComponent(messageText)}`;
 
   try {
     const response = await axios.get(apiUrl);
-    const simResponse = response.data.response;
+    const simResponse = response.data.reply;
 
     // Send the response from Sim back to the user
     sendMessage(senderId, { text: simResponse }, pageAccessToken);
