@@ -1,30 +1,35 @@
 const axios = require('axios');
+const { sendMessage } = require('../handles/sendMessage');
 
 module.exports = {
   name: 'gpt4',
-  description: 'Ask a question to GPT-4',
-  author: 'Deku (rest api)',
-  async execute(senderId, args, pageAccessToken, sendMessage) {
+  description: 'Interact with GPT-4 Turbo.',
+  usage: 'gpt4 [your message]',
+  author: 'coffee',
+
+  async execute(senderId, args, pageAccessToken) {
     const prompt = args.join(' ');
-
-    if (prompt === "") {
-      sendMessage(senderId, { text: "Usage: /gpt4 <question>" }, pageAccessToken);
-      return; // Ensure the function doesn't continue
-    }
-
-    // Inform the user that content is being generated
-    sendMessage(senderId, { text: 'Generating content... Please wait.' }, pageAccessToken);
+    if (!prompt) return sendMessage(senderId, { text: "Usage: gpt4 <your prompt>" }, pageAccessToken);
 
     try {
-      const apiUrl = `https://joshweb.click/gpt4?prompt=${encodeURIComponent(prompt)}&uid=${senderId}`;
-      const response = await axios.get(apiUrl);
-      const text = response.data.gpt4;
+      const { data } = await axios.get(`https://ryuu-rest-apis.onrender.com/api/gpt-4-turbo?q=${encodeURIComponent(prompt)}&id=${senderId}`);
+      const content = JSON.parse(data.content);
+      const imageUrl = content.match(/!image(.*?)/)?.[1];
 
-      // Send the generated text to the user
-      sendMessage(senderId, { text: "GPT4 BY CHATGPT:\n\n" + text }, pageAccessToken);
+      if (!imageUrl) return sendMessage(senderId, { text: 'No image found in the response.' }, pageAccessToken);
+
+      const { data: imageBuffer } = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      const { data: uploadResponse } = await axios.post('https://api.imgur.com/3/image', {
+        image: imageBuffer.toString('base64'),
+        type: 'base64'
+      }, { headers: { Authorization: 'Client-ID 7f22d7191831cfc' } });
+
+      await sendMessage(senderId, { text: content.prompt }, pageAccessToken);
+      await sendMessage(senderId, { attachment: { type: 'image', payload: { url: uploadResponse.data.data.link } } }, pageAccessToken);
+      
     } catch (error) {
-      console.error('Error calling GPT-4 API:', error);
-      sendMessage(senderId, { text: 'There was an error generating the content. Please try again later.' }, pageAccessToken);
+      console.error('Error:', error);
+      sendMessage(senderId, { text: 'Error: Could not generate or upload image.' }, pageAccessToken);
     }
   }
 };
