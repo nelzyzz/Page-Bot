@@ -32,7 +32,6 @@ app.post('/webhook', (req, res) => {
   const { body } = req;
 
   if (body.object === 'page') {
-    // Ensure entry and messaging exist before iterating
     body.entry?.forEach(entry => {
       entry.messaging?.forEach(event => {
         if (event.message) {
@@ -81,12 +80,10 @@ const loadMenuCommands = async (isReload = false) => {
   const commands = loadCommands();
 
   if (isReload) {
-    // Delete existing commands if reloading
     await sendMessengerProfileRequest('delete', '/me/messenger_profile', { fields: ['commands'] });
     console.log('Menu commands deleted successfully.');
   }
 
-  // Load new or updated commands
   await sendMessengerProfileRequest('post', '/me/messenger_profile', {
     commands: [{ locale: 'default', commands }],
   });
@@ -103,6 +100,26 @@ fs.watch(COMMANDS_PATH, (eventType, filename) => {
   }
 });
 
+// Periodic Keep-Alive Requests to Facebook API
+const keepAlive = () => {
+  axios.post(
+    `https://graph.facebook.com/v21.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`,
+    {
+      recipient: { id: '457440297450387' }, // Replace YOUR_PAGE_ID with your actual page ID
+      message: { text: 'your bot still running!!' },
+    }
+  )
+  .then(response => {
+    console.log('Keep-alive request sent successfully.');
+  })
+  .catch(error => {
+    console.error('Error sending keep-alive request:', error.message);
+  });
+};
+
+// Set interval for keep-alive requests every 5 minutes (300000 ms)
+setInterval(keepAlive, 300000); // 5 minutes
+
 // Server initialization
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
@@ -110,6 +127,7 @@ app.listen(PORT, async () => {
   // Load Messenger Menu Commands asynchronously after the server starts
   try {
     await loadMenuCommands(); // Load commands without deleting (initial load)
+    keepAlive(); // Send initial keep-alive request on start
   } catch (error) {
     console.error('Error loading initial menu commands:', error);
   }
