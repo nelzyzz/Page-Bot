@@ -1,73 +1,66 @@
-const fs = require('fs');
-const path = require('path');
-const { sendMessage } = require('./sendMessage');
-const axios = require('axios');
+const fs = require("fs");
+const path = require("path");
+const axios = require("axios");
+const config = require("../config.json");
+const { getTheme } = require("../website/web.js");
 
-const commands = new Map();
-const prefix = '/';
+module.exports = async function (event) {
+    const isAdmin = config.ADMINS.includes(event.sender.id);
+    const messageText = event.message?.text || event.postback?.title || "";
+    const imageUrl = event.message?.attachments?.[0]?.payload?.url; // If an image is sent
 
-// Load command files
-const commandFiles = fs.readdirSync(path.join(__dirname, '../commands')).filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-  const command = require(`../commands/${file}`);
-  commands.set(command.name.toLowerCase(), command);
-}
-
-async function handleMessage(event, pageAccessToken) {
-  const senderId = event.sender.id;
-  const messageText = event.message.text.trim().toLowerCase();
-
-  // Check if the user sends "prefix" (case insensitive)
-  if (messageText === 'prefix') {
-    sendMessage(senderId, { text: `The prefix for commands in this bot is "${prefix}".` }, pageAccessToken);
-    return;
-  }
-
-  // Check if the message starts with the prefix
-  if (!messageText.startsWith(prefix)) {
-    // Call the sim feature if there's no prefix
-    await callSimAPI(senderId, messageText, pageAccessToken);
-    return;
-  }
-
-  // Proceed with processing the command if it has the correct prefix
-  const args = messageText.slice(prefix.length).split(' ');
-  const commandName = args.shift().toLowerCase();
-
-  // Check if the user just sent the prefix "/"
-  if (commandName === '') {
-    sendMessage(senderId, { text: 'Invalid command. Please provide a valid command.' }, pageAccessToken);
-    return;
-  }
-
-  // Check if the command exists
-  if (commands.has(commandName)) {
-    const command = commands.get(commandName);
-    try {
-      await command.execute(senderId, args, pageAccessToken, sendMessage);
-    } catch (error) {
-      console.error(`Error executing command ${commandName}:`, error);
-      sendMessage(senderId, { text: 'There was an error executing that command.' }, pageAccessToken);
+    // Check if the message is an image
+    if (imageUrl) {
+        // Handle image recognition
+        const imageDescription = await recognizeImage(imageUrl, event.sender.id);
+        sendMessage(event.sender.id, { text: imageDescription }, event.pageAccessToken);
+    } else if (messageText) {
+        // Handle text messages with Sim API
+        await callSimAPI(event.sender.id, messageText, event.pageAccessToken);
     }
-  } else {
-    sendMessage(senderId, { text: `The command "${commandName}" is not available. Please use a valid command.` }, pageAccessToken);
-  }
-}
 
-// Function to call the Sim API
-async function callSimAPI(senderId, messageText, pageAccessToken) {
-  const apiUrl = `https://rest-api.joshuaapostol.site/simisimi?prompt=${encodeURIComponent(messageText)}`;
+    // Helper function to call Sim API for text responses
+    async function callSimAPI(senderId, messageText, pageAccessToken) {
+        const apiUrl = `https://rest-api.joshuaapostol.site/simisimi?prompt=${encodeURIComponent(messageText)}`;
 
-  try {
-    const response = await axios.get(apiUrl);
-    const simResponse = response.data.reply;
+        try {
+            const response = await axios.get(apiUrl);
+            const simResponse = response.data.reply;
 
-    // Send the response from Sim back to the user
-    sendMessage(senderId, { text: simResponse }, pageAccessToken);
-  } catch (error) {
-    console.error('Error calling Sim API:', error);
-    sendMessage(senderId, { text: 'There was an error communicating with Sim. Please try again later.' }, pageAccessToken);
-  }
-}
+            // Send the response from Sim API back to the user
+            sendMessage(senderId, { text: simResponse }, pageAccessToken);
+        } catch (error) {
+            console.error('Error calling Sim API:', error);
+            sendMessage(senderId, { text: 'There was an error communicating with Sim. Please try again later.' }, pageAccessToken);
+        }
+    }
 
-module.exports = { handleMessage };
+    // Helper function to send messages
+    function sendMessage(senderId, message, pageAccessToken) {
+        axios.post(`https://graph.facebook.com/v12.0/me/messages?access_token=${pageAccessToken}`, {
+            recipient: { id: senderId },
+            message: message
+        })
+        .then(() => {
+            console.log("Message sent successfully.");
+        })
+        .catch((error) => {
+            console.error("Error sending message:", error);
+        });
+    }
+
+    // Function to recognize the image and return a description
+    async function recognizeImage(imageUrl, senderId) {
+        const apiUrl = `https://joshweb.click/gemini?prompt=describe%20this%20photo&url=${encodeURIComponent(imageUrl)}`;
+
+        try {
+            const response = await axios.get(apiUrl);
+            const description = response.data.description || "Sorry, I couldn't describe the image.";
+
+            return description;
+        } catch (error) {
+            console.error("Error recognizing image:", error);
+            return "Apologies, the AI did not return a response. Please try rephrasing your message or try again later.";
+        }
+    }
+};
